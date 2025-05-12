@@ -22,32 +22,41 @@ class EmployeeData {
   });
 
   factory EmployeeData.fromJson(Map<String, dynamic> json) {
-    return EmployeeData(
-      employeeName: json['employee_name'] ?? 'Unknown',
-      employeeId: json['employee_id'] ?? 'Unknown',
-      department: json['department'] ?? 'Unknown',
-      month: json['month'] ?? 'Unknown',
-      tasksCompleted: json['tasks_completed'] ?? 'None',
-      goalsMet: _parseGoalsMet(json['goals_met']),
-      peerFeedback: json['peer_feedback'],
-      managerComments: json['manager_comments'],
-      summary: json['summary'] ?? '',
-    );
-  }
+    // Print the incoming JSON for debugging
+    print('Processing employee JSON: $json');
 
-  // Helper to parse goals_met safely
-  static double _parseGoalsMet(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) {
-      try {
-        return double.parse(value);
-      } catch (e) {
-        return 0.0;
+    // Extract tasks_completed - ensure it's not null or empty
+    String tasksCompleted = 'None';
+    if (json['tasks_completed'] != null &&
+        json['tasks_completed'].toString().trim().isNotEmpty) {
+      tasksCompleted = json['tasks_completed'].toString();
+    }
+
+    // Extract and parse goals_met safely
+    double goalsMet = 0.0;
+    if (json['goals_met'] != null) {
+      if (json['goals_met'] is num) {
+        goalsMet = (json['goals_met'] as num).toDouble();
+      } else if (json['goals_met'] is String) {
+        try {
+          goalsMet = double.parse(json['goals_met'].toString());
+        } catch (e) {
+          print('Error parsing goals_met: ${json['goals_met']}');
+        }
       }
     }
-    return 0.0;
+
+    return EmployeeData(
+      employeeName: json['employee_name']?.toString() ?? 'Unknown',
+      employeeId: json['employee_id']?.toString() ?? 'Unknown',
+      department: json['department']?.toString() ?? 'Unknown',
+      month: json['month']?.toString() ?? 'Unknown',
+      tasksCompleted: tasksCompleted,
+      goalsMet: goalsMet,
+      peerFeedback: json['peer_feedback']?.toString(),
+      managerComments: json['manager_comments']?.toString(),
+      summary: json['summary']?.toString() ?? '',
+    );
   }
 
   Map<String, dynamic> toJson() {

@@ -44,7 +44,7 @@ class ApiService {
       try {
         // Send the request
         final streamedResponse = await request.send().timeout(
-          const Duration(seconds: 30),
+          const Duration(seconds: 60), // Extended timeout for larger files
           onTimeout: () {
             throw Exception(
               'Connection timed out. Please check if the server is running and accessible.',
@@ -55,6 +55,11 @@ class ApiService {
         print('Response status code: ${streamedResponse.statusCode}');
         final responseBody = await streamedResponse.stream.bytesToString();
 
+        // Debug response
+        print(
+          'Raw response body (first 500 chars): ${responseBody.substring(0, responseBody.length > 500 ? 500 : responseBody.length)}...',
+        );
+
         if (streamedResponse.statusCode == 200) {
           print('Successfully received response');
 
@@ -64,25 +69,40 @@ class ApiService {
             print('JSON response type: ${jsonResponse.runtimeType}');
 
             if (jsonResponse is List) {
-              // Loop through each item and log its structure
+              print('Response contains ${jsonResponse.length} items');
+
+              // Log complete structure of first item for debugging
+              if (jsonResponse.isNotEmpty) {
+                print(
+                  'First item complete structure: ${json.encode(jsonResponse[0])}',
+                );
+              }
+
+              // Loop through each item and create employee objects
               List<EmployeeData> employees = [];
               for (int i = 0; i < jsonResponse.length; i++) {
                 final item = jsonResponse[i];
-                print('Item $i structure: $item');
+                print(
+                  'Processing item $i: employee_name=${item['employee_name']}, goals_met=${item['goals_met']}, tasks_completed=${item['tasks_completed']}',
+                );
 
                 try {
-                  employees.add(EmployeeData.fromJson(item));
+                  final employee = EmployeeData.fromJson(item);
+                  print(
+                    'Successfully parsed employee ${employee.employeeName} with goals_met=${employee.goalsMet} and tasks=${employee.tasksCompleted}',
+                  );
+                  employees.add(employee);
                 } catch (e) {
                   print('Error parsing item $i: $e');
                   // Add a placeholder employee if there's an error
                   employees.add(
                     EmployeeData(
                       employeeName:
-                          'Error: ${e.toString().substring(0, 30)}...',
-                      employeeId: 'Error',
-                      department: 'Error',
-                      month: 'Error',
-                      tasksCompleted: 'Error',
+                          item['employee_name']?.toString() ?? 'Error',
+                      employeeId: item['employee_id']?.toString() ?? 'Error',
+                      department: item['department']?.toString() ?? 'Error',
+                      month: item['month']?.toString() ?? 'Error',
+                      tasksCompleted: 'Error parsing data',
                       goalsMet: 0.0,
                       summary:
                           'Error parsing this employee data: ${e.toString()}',

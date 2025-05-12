@@ -6,6 +6,7 @@ import io
 from .services import generate_summary_with_gemini
 from typing import List, Optional
 import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables
@@ -36,6 +37,10 @@ class SummaryResponse(BaseModel):
     employee_id: str
     department: str
     month: str
+    tasks_completed: str  # Added to ensure tasks are returned
+    goals_met: float  # Added to ensure goals are returned
+    peer_feedback: Optional[str] = None  # Added optional fields
+    manager_comments: Optional[str] = None  # Added optional fields
     summary: str
 
 @app.get("/")
@@ -58,6 +63,10 @@ async def upload_csv(file: UploadFile = File(...)):
         contents = await file.read()
         df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
         
+        # Print the first few rows of the DataFrame for debugging
+        print("CSV Contents (First 5 rows):")
+        print(df.head())
+        
         # Validate required columns
         required_columns = ['employee_name', 'employee_id', 'department', 'month', 
                            'tasks_completed', 'goals_met']
@@ -72,15 +81,22 @@ async def upload_csv(file: UploadFile = File(...)):
         # Generate summaries for each employee
         summaries = []
         
-        for _, row in df.iterrows():
-            # Safely get values, providing defaults for missing data
+        for idx, row in df.iterrows():
+            # Ensure proper data types
+            try:
+                goals_met = float(row['goals_met'])
+            except (ValueError, TypeError):
+                print(f"Warning: Invalid goals_met value: {row['goals_met']} for employee {row['employee_name']}")
+                goals_met = 0.0
+                
+            # Create employee object
             employee = EmployeeData(
-                employee_name=str(row.get('employee_name', 'Unknown')),
-                employee_id=str(row.get('employee_id', 'Unknown')),
-                department=str(row.get('department', 'Unknown')),
-                month=str(row.get('month', 'Unknown')),
-                tasks_completed=str(row.get('tasks_completed', 'None')),
-                goals_met=float(row.get('goals_met', 0.0)),
+                employee_name=str(row['employee_name']),
+                employee_id=str(row['employee_id']),
+                department=str(row['department']),
+                month=str(row['month']),
+                tasks_completed=str(row['tasks_completed']),
+                goals_met=goals_met,
                 peer_feedback=str(row['peer_feedback']) if 'peer_feedback' in row and pd.notna(row['peer_feedback']) else None,
                 manager_comments=str(row['manager_comments']) if 'manager_comments' in row and pd.notna(row['manager_comments']) else None
             )
@@ -92,18 +108,25 @@ async def upload_csv(file: UploadFile = File(...)):
                 print(f"Error generating summary: {e}")
                 summary = f"Error generating summary: {str(e)}"
             
-            summaries.append(SummaryResponse(
+            # Create response object
+            response_item = SummaryResponse(
                 employee_name=employee.employee_name,
                 employee_id=employee.employee_id,
                 department=employee.department,
                 month=employee.month,
+                tasks_completed=employee.tasks_completed,
+                goals_met=employee.goals_met,
+                peer_feedback=employee.peer_feedback,
+                manager_comments=employee.manager_comments,
                 summary=summary
-            ))
-        
-        # Print the output for debugging
-        for s in summaries:
-            print(f"Response item: {s.dict()}")
+            )
             
+            # Print the response object for debugging
+            print(f"Response item {idx}:")
+            print(response_item.dict())
+            
+            summaries.append(response_item)
+        
         return summaries
     
     except Exception as e:
@@ -113,5 +136,3 @@ async def upload_csv(file: UploadFile = File(...)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-    
-    # main.py

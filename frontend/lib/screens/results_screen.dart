@@ -121,6 +121,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
       _summaryControllers[emp.employeeId] = controller;
     }
 
+    // Format goals_met properly
+    final goalsMetFormatted = '${emp.goalsMet.toStringAsFixed(1)}%';
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 3,
@@ -149,7 +152,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildInfoRow('Department', emp.department),
-                  _buildInfoRow('Goals Met', '${emp.goalsMet}%'),
+                  _buildInfoRow('Goals Met', goalsMetFormatted),
                   _buildInfoRow('Tasks Completed', emp.tasksCompleted),
                   if (emp.peerFeedback != null && emp.peerFeedback!.isNotEmpty)
                     _buildInfoRow('Peer Feedback', emp.peerFeedback!),
