@@ -638,22 +638,13 @@ class _SearchFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // Create a TextEditingController with the initial text set to searchQuery
-    final TextEditingController searchController =
-        TextEditingController(text: searchQuery);
-
-    // Set the cursor position at the end of the text
-    searchController.selection = TextSelection.fromPosition(
-      TextPosition(offset: searchController.text.length),
-    );
-
     return Container(
       color: colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Column(
         children: [
           TextField(
-            controller: searchController,
+            controller: TextEditingController(text: searchQuery),
             onChanged: onSearchChanged,
             decoration: InputDecoration(
               hintText: 'Search employees',

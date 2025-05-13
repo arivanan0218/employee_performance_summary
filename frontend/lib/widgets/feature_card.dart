@@ -18,10 +18,9 @@ class FeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width =
-            constraints.maxWidth > 600
-                ? (constraints.maxWidth - 48) / 2
-                : constraints.maxWidth;
+        final width = constraints.maxWidth > 600
+            ? (constraints.maxWidth - 48) / 2
+            : constraints.maxWidth;
 
         return Container(
           width: width,
@@ -59,17 +58,17 @@ class FeatureCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       description,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.7),
-                      ),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.7),
+                          ),
                     ),
                   ],
                 ),
